@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.1.1",
+    "dotenv": "^16.0.0",
+    "node-fetch": "^3.3.0",
+    "zod": "^3.0.0"
+  }
+}
