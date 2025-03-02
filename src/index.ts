@@ -23,6 +23,22 @@ const CreateBookmarkSchema = z.object({
 const SearchBookmarksSchema = z.object({
   query: z.string(),
   tags: z.array(z.string()).optional(),
+  page: z.number().min(0).optional(),
+  perpage: z.number().min(1).max(50).optional(),
+  sort: z
+    .enum([
+      "-created",
+      "created",
+      "-last_update",
+      "last_update",
+      "-title",
+      "title",
+      "-domain",
+      "domain",
+    ])
+    .optional(),
+  collection: z.number().optional(),
+  word: z.boolean().optional(),
 });
 
 const server = new Server(
@@ -110,8 +126,48 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               items: { type: "string" },
               description: "Filter by tags (optional)",
             },
+            page: {
+              type: "number",
+              description: "Page number (0-based, optional)",
+            },
+            perpage: {
+              type: "number",
+              description: "Items per page (1-50, optional)",
+            },
+            sort: {
+              type: "string",
+              enum: [
+                "-created",
+                "created",
+                "-last_update",
+                "last_update",
+                "-title",
+                "title",
+                "-domain",
+                "domain",
+              ],
+              description:
+                "Sort order (optional). Prefix with - for descending order.",
+            },
+            collection: {
+              type: "number",
+              description:
+                "Collection ID to search in (optional, 0 for all collections)",
+            },
+            word: {
+              type: "boolean",
+              description: "Whether to match exact words only (optional)",
+            },
           },
           required: ["query"],
+        },
+      },
+      {
+        name: "list-collections",
+        description: "List all your Raindrop.io collections",
+        inputSchema: {
+          type: "object",
+          properties: {},
         },
       },
     ],
@@ -147,15 +203,21 @@ server.setRequestHandler(
       }
 
       if (name === "search-bookmarks") {
-        const { query, tags } = SearchBookmarksSchema.parse(args);
+        const { query, tags, page, perpage, sort, collection, word } =
+          SearchBookmarksSchema.parse(args);
 
         const searchParams = new URLSearchParams({
           search: query,
           ...(tags && { tags: tags.join(",") }),
+          ...(page !== undefined && { page: page.toString() }),
+          ...(perpage !== undefined && { perpage: perpage.toString() }),
+          ...(sort && { sort }),
+          ...(word !== undefined && { word: word.toString() }),
         });
 
+        const collectionId = collection ?? 0;
         const results = await makeRaindropRequest(
-          `/raindrops/0?${searchParams}`
+          `/raindrops/${collectionId}?${searchParams}`
         );
 
         const formattedResults = results.items
@@ -163,7 +225,9 @@ server.setRequestHandler(
             (item: any) => `
 Title: ${item.title}
 URL: ${item.link}
-Tags: ${item.tags.join(", ") || "No tags"}
+Tags: ${item.tags?.length ? item.tags.join(", ") : "No tags"}
+Created: ${new Date(item.created).toLocaleString()}
+Last Updated: ${new Date(item.lastUpdate).toLocaleString()}
 ---`
           )
           .join("\n");
@@ -174,8 +238,38 @@ Tags: ${item.tags.join(", ") || "No tags"}
               type: "text",
               text:
                 results.items.length > 0
-                  ? `Found ${results.items.length} bookmarks:\n${formattedResults}`
+                  ? `Found ${results.count} total bookmarks (showing ${
+                      results.items.length
+                    } on page ${page ?? 0 + 1}):\n${formattedResults}`
                   : "No bookmarks found matching your search.",
+            },
+          ],
+        };
+      }
+
+      if (name === "list-collections") {
+        const collections = await makeRaindropRequest("/collections");
+
+        const formattedCollections = collections.items
+          .map(
+            (item: any) => `
+Name: ${item.title}
+ID: ${item._id}
+Count: ${item.count} bookmarks
+Parent: ${item.parent?._id || "None"}
+Created: ${new Date(item.created).toLocaleString()}
+---`
+          )
+          .join("\n");
+
+        return {
+          content: [
+            {
+              type: "text",
+              text:
+                collections.items.length > 0
+                  ? `Found ${collections.items.length} collections:\n${formattedCollections}`
+                  : "No collections found.",
             },
           ],
         };
