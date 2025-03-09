@@ -1,132 +1,155 @@
-# Raindrop.io MCP Server
+# MCP Raindrop
 
-An integration that allows LLMs to interact with Raindrop.io bookmarks using the Model Context Protocol (MCP).
+A Model Context Protocol (MCP) server implementation for Raindrop.io API, providing bookmark management capabilities.
 
 ## Features
 
-- Create bookmarks
-- Search bookmarks
-- Filter by tags
+- **Bookmark Management Tools**:
+  - `create-bookmark`: Create new bookmarks with customizable metadata
+  - `search-bookmarks`: Search through your bookmarks with flexible filtering
+  - `list-collections`: View all your bookmark collections
+- **Rich Configuration Options**: Extensive options for searching, tagging, and organizing bookmarks
 
-## Requirements
+### Usage with MCP
 
-- Node.js 16 or higher
-- Raindrop.io account and API token
+Add the Raindrop.io MCP server to your MCP configuration:
 
-## Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/hiromitsusasaki/raindrop-io-mcp-server
-cd raindrop-io-mcp-server
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up environment variables:
-- Create a `.env` file and set your Raindrop.io API token
-```
-RAINDROP_TOKEN=your_access_token_here
-```
-
-4. Build:
-```bash
-npm run build
-```
-
-## Using with Claude for Desktop
-
-1. Open Claude for Desktop configuration file:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-2. Add the following configuration:
 ```json
 {
   "mcpServers": {
     "raindrop": {
-      "command": "node",
-      "args": ["PATH_TO_BUILD/index.js"],
+      "command": "npx",
+      "args": ["-y", "@mcptools/mcp-raindrop"],
       "env": {
-        "RAINDROP_TOKEN": "your_access_token_here"
+        "RAINDROP_TOKEN": "your-api-token"
       }
     }
   }
 }
 ```
 
-3. Restart Claude for Desktop
+> Note: Make sure to replace `your-api-token` with your actual Raindrop.io API token. You can also set it as an environment variable `RAINDROP_TOKEN` before running the server.
 
-## Available Tools
+## API Reference
 
-### create-bookmark
-Creates a new bookmark.
+### Bookmark Tools
 
-**Parameters:**
-- `url`: URL to bookmark (required)
-- `title`: Title for the bookmark (optional)
-- `tags`: Array of tags (optional)
-- `collection`: Collection ID (optional)
+The server provides three tools that can be called through MCP:
 
-### search-bookmarks
-Searches through bookmarks.
+#### 1. Create Bookmark
 
-**Parameters:**
-- `query`: Search query (required)
-- `tags`: Array of tags to filter by (optional)
-
-## Development
-
-```bash
-# Build for development
-npm run build
-
-# Start server
-npm start
+```typescript
+// Tool name: create-bookmark
+{
+  url: "https://example.com/article",
+  title: "Example Article",
+  tags: ["example", "article"],
+  collection: 123456
+}
 ```
 
-## Security Notes
+#### 2. Search Bookmarks
 
-- Always manage API tokens using environment variables
-- Set appropriate permissions for Claude for Desktop configuration files
-- Restrict unnecessary file access
+```typescript
+// Tool name: search-bookmarks
+{
+  query: "example search",
+  tags: ["example"],
+  page: 0,
+  perpage: 20,
+  sort: "-created",
+  collection: 123456,
+  word: false
+}
+```
+
+#### 3. List Collections
+
+```typescript
+// Tool name: list-collections
+{
+}
+```
+
+### Response Format
+
+All tools return responses in the following format:
+
+```typescript
+{
+  content: Array<{
+    type: "text";
+    text: string;
+  }>;
+}
+```
+
+For search results, each item includes:
+
+- Title
+- URL
+- Tags
+- Creation date
+- Last update date
+
+For collections, each item includes:
+
+- Name
+- ID
+- Bookmark count
+- Parent collection
+- Creation date
+
+## Error Handling
+
+All tools include proper error handling and will throw descriptive error messages if something goes wrong.
+
+## Installation
+
+```bash
+npm install @mcptools/mcp-raindrop
+```
+
+Or use it directly with npx:
+
+```bash
+npx @mcptools/mcp-raindrop
+```
+
+### Prerequisites
+
+- Node.js 16 or higher
+- npm or yarn
+- Raindrop.io API token (get one from your [Raindrop.io account settings](https://app.raindrop.io/settings/integrations))
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Set your Raindrop.io API token:
+
+```bash
+export RAINDROP_TOKEN=your_api_token
+```
+
+### Building
+
+```bash
+npm run build
+```
 
 ## License
 
-MIT License
+This project is licensed under the MIT License.
 
-Copyright (c) 2024 Hiromitsu Sasaki
+## Support
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+For any questions or issues:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## Related Links
-
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Raindrop.io API Documentation](https://developer.raindrop.io/)
+- Raindrop.io API: refer to the [Raindrop.io API documentation](https://developer.raindrop.io/)
+- MCP integration: refer to the [MCP documentation](https://modelcontextprotocol.io/)
