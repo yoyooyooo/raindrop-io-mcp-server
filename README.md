@@ -143,13 +143,15 @@ export RAINDROP_TOKEN=your_api_token
 npm run build
 ```
 
-## License
+## Open Source
 
-This project is licensed under the MIT License.
+This is an open source MCP server that anyone can use and contribute to. The project is released under the MIT License.
 
-## Support
+## Contributing
 
-For any questions or issues:
+Contributions are welcome! Feel free to submit issues, feature requests, or pull requests to help improve this project.
 
-- Raindrop.io API: refer to the [Raindrop.io API documentation](https://developer.raindrop.io/)
-- MCP integration: refer to the [MCP documentation](https://modelcontextprotocol.io/)
+## Related Links
+
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [Raindrop.io API Documentation](https://developer.raindrop.io/)
